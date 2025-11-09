@@ -1,0 +1,176 @@
+# Cross-platform Makefile for Windows, macOS, and Linux
+# Works with GNU Make, MinGW Make, and MSYS2 Make
+# Supports cross-compilation from macOS/Linux to Windows
+
+# Detect OS
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := Windows
+    EXE_EXT := .exe
+    RM := del /F /Q
+    RMDIR := rmdir /S /Q
+    MKDIR := mkdir
+    RUN_PREFIX :=
+else
+    DETECTED_OS := $(shell uname -s 2>/dev/null || echo "Unknown")
+    EXE_EXT :=
+    RM := rm -f
+    RMDIR := rm -rf
+    MKDIR := mkdir -p
+    RUN_PREFIX := ./
+endif
+
+# Cross-compilation toolchain for Windows
+MINGW_CXX := x86_64-w64-mingw32-g++
+MINGW_AVAILABLE := $(shell which $(MINGW_CXX) 2>/dev/null)
+
+# Detect compiler (g++ or clang++)
+ifeq ($(DETECTED_OS),Windows)
+    # On Windows, try where command first, then fallback
+    CXX := $(shell where g++ 2>nul || where clang++ 2>nul || echo "g++")
+else
+    # On Unix-like systems, try which or command -v
+    CXX := $(shell which g++ 2>/dev/null || which clang++ 2>/dev/null || command -v g++ 2>/dev/null || command -v clang++ 2>/dev/null || echo "g++")
+endif
+
+# Compiler flags
+CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic -Iinclude
+CXXFLAGS_WIN = -std=c++11 -Wall -Wextra -pedantic -Iinclude
+# Force static linking of all libraries including pthread and stdc++
+LDFLAGS_WIN = -static -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lwinpthread -Wl,-Bdynamic
+
+# Project structure
+TARGET = bank_system$(EXE_EXT)
+TARGET_WINDOWS = bank_system.exe
+SRC_DIR = src
+INCLUDE_DIR = include
+BUILD_DIR = build
+BUILD_DIR_WIN = build_win
+DOCS_DIR = docs
+
+# Source files
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
+OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
+OBJECTS_WIN = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR_WIN)/%.o,$(SOURCES))
+
+# Default target (native build)
+all: $(TARGET)
+
+# Link executable
+$(TARGET): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJECTS)
+ifeq ($(DETECTED_OS),Windows)
+	@echo Build successful! Run with: $(TARGET)
+else
+	@echo "✓ Build successful! Run with: $(RUN_PREFIX)$(TARGET)"
+endif
+
+# Compile object files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(wildcard $(INCLUDE_DIR)/*.h) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Create build directory
+$(BUILD_DIR):
+ifeq ($(DETECTED_OS),Windows)
+	@if not exist $(BUILD_DIR) $(MKDIR) $(BUILD_DIR)
+else
+	@$(MKDIR) $(BUILD_DIR)
+endif
+
+# Windows cross-compilation targets
+windows: check-mingw $(TARGET_WINDOWS)
+
+check-mingw:
+ifeq ($(MINGW_AVAILABLE),)
+	@echo "Error: MinGW cross-compiler not found!"
+	@echo "On macOS, install with: brew install mingw-w64"
+	@echo "On Linux (Ubuntu/Debian), install with: sudo apt-get install mingw-w64"
+	@exit 1
+else
+	@echo "Using MinGW cross-compiler: $(MINGW_CXX)"
+endif
+
+$(TARGET_WINDOWS): $(OBJECTS_WIN)
+	$(MINGW_CXX) $(CXXFLAGS) -o $(TARGET_WINDOWS) $(OBJECTS_WIN) $(LDFLAGS_WIN)
+	@echo "✓ Windows build successful! File: $(TARGET_WINDOWS)"
+
+$(BUILD_DIR_WIN)/%.o: $(SRC_DIR)/%.cpp $(wildcard $(INCLUDE_DIR)/*.h) | $(BUILD_DIR_WIN)
+	$(MINGW_CXX) $(CXXFLAGS) -c $< -o $@
+
+$(BUILD_DIR_WIN):
+	@$(MKDIR) $(BUILD_DIR_WIN)
+
+# Build for both native and Windows
+all-platforms: all windows
+
+# Clean build artifacts
+clean:
+ifeq ($(DETECTED_OS),Windows)
+	@if exist $(BUILD_DIR)\*.o $(RM) $(BUILD_DIR)\*.o 2>nul
+	@if exist $(BUILD_DIR_WIN)\*.o $(RM) $(BUILD_DIR_WIN)\*.o 2>nul
+	@if exist $(TARGET) $(RM) $(TARGET) 2>nul
+	@if exist $(TARGET_WINDOWS) $(RM) $(TARGET_WINDOWS) 2>nul
+	@if exist bank_accounts.dat $(RM) bank_accounts.dat 2>nul
+	@if exist accounts.dat $(RM) accounts.dat 2>nul
+	@if exist equal_accounts.dat $(RM) equal_accounts.dat 2>nul
+	@echo Cleaned build artifacts
+else
+	@$(RM) $(BUILD_DIR)/*.o $(TARGET) 2>/dev/null || true
+	@$(RM) $(BUILD_DIR_WIN)/*.o $(TARGET_WINDOWS) 2>/dev/null || true
+	@$(RM) bank_accounts.dat accounts.dat equal_accounts.dat 2>/dev/null || true
+	@echo "✓ Cleaned build artifacts"
+endif
+
+clean-data:
+ifeq ($(DETECTED_OS),Windows)
+	@if exist bank_accounts.dat $(RM) bank_accounts.dat 2>nul
+	@if exist accounts.dat $(RM) accounts.dat 2>nul
+	@if exist equal_accounts.dat $(RM) equal_accounts.dat 2>nul
+	@echo Cleaned data files
+else
+	@$(RM) bank_accounts.dat accounts.dat equal_accounts.dat 2>/dev/null || true
+	@echo "✓ Cleaned data files"
+endif
+
+clean-all: clean
+ifeq ($(DETECTED_OS),Windows)
+	@if exist $(BUILD_DIR) $(RMDIR) $(BUILD_DIR) 2>nul
+	@if exist $(BUILD_DIR_WIN) $(RMDIR) $(BUILD_DIR_WIN) 2>nul
+	@echo Cleaned everything
+else
+	@$(RMDIR) $(BUILD_DIR) $(BUILD_DIR_WIN) 2>/dev/null || true
+	@echo "✓ Cleaned everything"
+endif
+
+# Run the executable
+run: $(TARGET)
+	$(RUN_PREFIX)$(TARGET)
+
+# Rebuild from scratch
+rebuild: clean all
+
+structure:
+	@echo "Project Structure:"
+	@echo "├── src/          - Source files (.cpp)"
+	@echo "├── include/      - Header files (.h)"
+	@echo "├── build/        - Compiled object files (native)"
+	@echo "├── build_win/    - Compiled object files (Windows)"
+	@echo "├── docs/         - Documentation"
+	@echo "├── Makefile      - Build configuration"
+	@echo "├── README.md     - Project overview"
+	@echo "└── bank_system   - Executable"
+
+help:
+	@echo "Available targets:"
+	@echo "  make              - Compile the project for native platform"
+	@echo "  make windows      - Cross-compile for Windows (.exe)"
+	@echo "  make all-platforms- Build for both native and Windows"
+	@echo "  make run          - Compile and run"
+	@echo "  make clean        - Remove build artifacts"
+	@echo "  make clean-data   - Remove data files"
+	@echo "  make clean-all    - Remove everything including build dirs"
+	@echo "  make rebuild      - Clean and recompile"
+	@echo "  make structure    - Show project structure"
+	@echo "  make help         - Show this help message"
+
+.PHONY: all windows all-platforms check-mingw clean clean-data clean-all run rebuild structure help
+
