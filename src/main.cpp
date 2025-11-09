@@ -7,6 +7,9 @@
 #include <set>
 #include <map>
 #include <string>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "BankAccount.h"
 
 // Function prototypes
@@ -37,9 +40,9 @@ int main() {
     bool running = true;
     
     std::cout << "\n";
-    std::cout << "╔═══════════════════════════════════════════════════════════════╗\n";
-    std::cout << "║          Bank Accounts Management System                     ║\n";
-    std::cout << "╚═══════════════════════════════════════════════════════════════╝\n";
+    std::cout << std::string(65, '=') << std::endl;
+    std::cout << "          Bank Accounts Management System        " << std::endl;
+    std::cout << std::string(65, '=') << std::endl;
     
     while (running) {
         displayMainMenu();
@@ -84,7 +87,7 @@ int main() {
                     std::cout << "Invalid option!\n";
             }
         } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
+            std::cerr << "[ERROR] Error: " << e.what() << std::endl;
             pauseScreen();
         }
     }
@@ -117,9 +120,9 @@ void addBankAccount(std::vector<BankAccount>& accounts) {
         BankAccount account;
         std::cin >> account;
         accounts.push_back(account);
-        std::cout << "\n✓ Account added successfully!\n";
+        std::cout << "\n[OK] Account added successfully!\n";
     } catch (const std::exception& e) {
-        std::cerr << "✗ Error adding account: " 
+        std::cerr << "[ERROR] Error adding account: " 
                   << e.what() << std::endl;
     }
     
@@ -130,7 +133,7 @@ void addDepositToAccount(std::vector<BankAccount>& accounts) {
     clearScreen();
     
     if (accounts.empty()) {
-        std::cout << "\n✗ No accounts available! Add an account first.\n";
+        std::cout << "\n[ERROR] No accounts available! Add an account first.\n";
         pauseScreen();
         return;
     }
@@ -145,9 +148,9 @@ void addDepositToAccount(std::vector<BankAccount>& accounts) {
     try {
         double amount = getValidatedDouble("Enter deposit amount: ");
         accounts[accountIndex].addDeposit(amount);
-        std::cout << "\n✓ Deposit added successfully!\n";
+        std::cout << "\n[OK] Deposit added successfully!\n";
     } catch (const std::exception& e) {
-        std::cerr << "✗ Error adding deposit: " 
+        std::cerr << "[ERROR] Error adding deposit: " 
                   << e.what() << std::endl;
     }
     
@@ -158,7 +161,7 @@ void addWithdrawalToAccount(std::vector<BankAccount>& accounts) {
     clearScreen();
     
     if (accounts.empty()) {
-        std::cout << "\n✗ No accounts available! Add an account first.\n";
+        std::cout << "\n[ERROR] No accounts available! Add an account first.\n";
         pauseScreen();
         return;
     }
@@ -173,9 +176,9 @@ void addWithdrawalToAccount(std::vector<BankAccount>& accounts) {
     try {
         double amount = getValidatedDouble("Enter withdrawal amount: ");
         accounts[accountIndex].addWithdrawal(amount);
-        std::cout << "\n✓ Withdrawal added successfully!\n";
+        std::cout << "\n[OK] Withdrawal added successfully!\n";
     } catch (const std::exception& e) {
-        std::cerr << "✗ Error adding withdrawal: " 
+        std::cerr << "[ERROR] Error adding withdrawal: " 
                   << e.what() << std::endl;
     }
     
@@ -186,7 +189,7 @@ void displayAllAccounts(const std::vector<BankAccount>& accounts) {
     clearScreen();
     
     if (accounts.empty()) {
-        std::cout << "\n✗ No accounts available!\n";
+        std::cout << "\n[ERROR] No accounts available!\n";
         pauseScreen();
         return;
     }
@@ -205,7 +208,7 @@ void displayAccountDetails(const std::vector<BankAccount>& accounts) {
     clearScreen();
     
     if (accounts.empty()) {
-        std::cout << "\n✗ No accounts available!\n";
+        std::cout << "\n[ERROR] No accounts available!\n";
         pauseScreen();
         return;
     }
@@ -225,7 +228,7 @@ void createAccountsFile(const std::vector<BankAccount>& accounts) {
     clearScreen();
     
     if (accounts.empty()) {
-        std::cout << "\n✗ No accounts available!\n";
+        std::cout << "\n[ERROR] No accounts available!\n";
         pauseScreen();
         return;
     }
@@ -253,10 +256,10 @@ void createAccountsFile(const std::vector<BankAccount>& accounts) {
         }
         file.close();
         
-        std::cout << "\n✓ File \"" << filename << "\" created successfully!\n";
+        std::cout << "\n[OK] File \"" << filename << "\" created successfully!\n";
         std::cout << "  Accounts count: " << accounts.size() << "\n";
     } catch (const std::exception& e) {
-        std::cerr << "✗ Error creating file: " 
+        std::cerr << "[ERROR] Error creating file: " 
                   << e.what() << std::endl;
     }
     
@@ -267,7 +270,7 @@ void displayOwnersWithMultipleAccounts(const std::vector<BankAccount>& accounts)
     clearScreen();
     
     if (accounts.empty()) {
-        std::cout << "\n✗ No accounts available!\n";
+        std::cout << "\n[ERROR] No accounts available!\n";
         pauseScreen();
         return;
     }
@@ -309,7 +312,7 @@ void displayDepositWithdrawalDifferences(const std::vector<BankAccount>& account
     clearScreen();
     
     if (accounts.empty()) {
-        std::cout << "\n✗ No accounts available!\n";
+        std::cout << "\n[ERROR] No accounts available!\n";
         pauseScreen();
         return;
     }
@@ -343,7 +346,7 @@ void saveEqualAccountsToFile(const std::vector<BankAccount>& accounts) {
     clearScreen();
     
     if (accounts.empty()) {
-        std::cout << "\n✗ No accounts available!\n";
+        std::cout << "\n[ERROR] No accounts available!\n";
         pauseScreen();
         return;
     }
@@ -378,7 +381,7 @@ void saveEqualAccountsToFile(const std::vector<BankAccount>& accounts) {
         }
         file.close();
         
-        std::cout << "✓ File \"" << filename << "\" created successfully!\n";
+        std::cout << "[OK] File \"" << filename << "\" created successfully!\n";
         std::cout << "  Accounts count: " << equalAccounts.size() << "\n\n";
         
         std::cout << "Accounts with equal deposits and withdrawals:\n\n";
@@ -387,7 +390,7 @@ void saveEqualAccountsToFile(const std::vector<BankAccount>& accounts) {
             std::cout << std::string(65, '-') << std::endl;
         }
     } catch (const std::exception& e) {
-        std::cerr << "✗ Error creating file: " 
+        std::cerr << "[ERROR] Error creating file: " 
                   << e.what() << std::endl;
     }
     
@@ -407,10 +410,10 @@ void saveDataToFile(const std::vector<BankAccount>& accounts) {
         }
         file.close();
         
-        std::cout << "\n✓ Data saved successfully!\n";
+        std::cout << "\n[OK] Data saved successfully!\n";
         std::cout << "  Accounts count: " << accounts.size() << "\n";
     } catch (const std::exception& e) {
-        std::cerr << "✗ Error saving: " << e.what() << std::endl;
+        std::cerr << "[ERROR] Error saving: " << e.what() << std::endl;
     }
 }
 
@@ -430,12 +433,12 @@ void loadDataFromFile(std::vector<BankAccount>& accounts) {
             }
             file.close();
             
-            std::cout << "\n✓ Data loaded successfully!\n";
+            std::cout << "\n[OK] Data loaded successfully!\n";
             std::cout << "  Accounts count: " << accounts.size() << "\n";
             pauseScreen();
         }
     } catch (const std::exception& e) {
-        std::cerr << "✗ Error loading: " << e.what() << std::endl;
+        std::cerr << "[ERROR] Error loading: " << e.what() << std::endl;
     }
 }
 
@@ -456,7 +459,25 @@ int selectAccount(const std::vector<BankAccount>& accounts) {
 }
 
 void clearScreen() {
+#ifdef _WIN32
+    // Windows-specific screen clear
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hConsole != INVALID_HANDLE_VALUE) {
+        COORD coordScreen = {0, 0};
+        DWORD cCharsWritten;
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        
+        if (GetConsoleScreenBufferInfo(hConsole, &csbi)) {
+            DWORD dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+            FillConsoleOutputCharacter(hConsole, (TCHAR)' ', dwConSize, coordScreen, &cCharsWritten);
+            FillConsoleOutputAttribute(hConsole, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten);
+            SetConsoleCursorPosition(hConsole, coordScreen);
+        }
+    }
+#else
+    // Unix/Linux/Mac: Use ANSI escape codes
     std::cout << "\033[2J\033[1;1H";
+#endif
 }
 
 void pauseScreen() {
@@ -475,9 +496,9 @@ int getValidatedInt(const std::string& prompt, int min, int max) {
         if (std::cin.fail()) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "✗ Invalid input! Please enter a number.\n";
+            std::cout << "[ERROR] Invalid input! Please enter a number.\n";
         } else if (value < min || value > max) {
-            std::cout << "✗ Number must be between " << min << " and " << max << ".\n";
+            std::cout << "[ERROR] Number must be between " << min << " and " << max << ".\n";
         } else {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             return value;
@@ -494,9 +515,9 @@ double getValidatedDouble(const std::string& prompt, double min) {
         if (std::cin.fail()) {
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cout << "✗ Invalid input! Please enter a number.\n";
+            std::cout << "[ERROR] Invalid input! Please enter a number.\n";
         } else if (value < min) {
-            std::cout << "✗ Number must be at least " << min << ".\n";
+            std::cout << "[ERROR] Number must be at least " << min << ".\n";
         } else {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             return value;
