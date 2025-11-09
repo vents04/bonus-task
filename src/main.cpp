@@ -119,6 +119,7 @@ void addBankAccount(std::vector<BankAccount>& accounts) {
     try {
         BankAccount account;
         std::cin >> account;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         accounts.push_back(account);
         std::cout << "\n[OK] Account added successfully!\n";
     } catch (const std::exception& e) {
@@ -237,7 +238,8 @@ void createAccountsFile(const std::vector<BankAccount>& accounts) {
     
     std::string filename;
     std::cout << "Enter filename: ";
-    std::cin.ignore();
+    std::cout.flush();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::getline(std::cin, filename);
     
     if (filename.empty()) {
@@ -491,6 +493,7 @@ int getValidatedInt(const std::string& prompt, int min, int max) {
     int value;
     while (true) {
         std::cout << prompt;
+        std::cout.flush();
         std::cin >> value;
         
         if (std::cin.fail()) {
@@ -510,6 +513,7 @@ double getValidatedDouble(const std::string& prompt, double min) {
     double value;
     while (true) {
         std::cout << prompt;
+        std::cout.flush();
         std::cin >> value;
         
         if (std::cin.fail()) {
