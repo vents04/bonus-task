@@ -119,7 +119,6 @@ void addBankAccount(std::vector<BankAccount>& accounts) {
     try {
         BankAccount account;
         std::cin >> account;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         accounts.push_back(account);
         std::cout << "\n[OK] Account added successfully!\n";
     } catch (const std::exception& e) {
@@ -521,6 +520,7 @@ double getValidatedDouble(const std::string& prompt, double min) {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "[ERROR] Invalid input! Please enter a number.\n";
         } else if (value < min) {
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "[ERROR] Number must be at least " << min << ".\n";
         } else {
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');

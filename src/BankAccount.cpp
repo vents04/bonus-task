@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <iomanip>
 #include <cctype>
+#include <limits>
 
 void BankAccount::validateUniqueCode(const char* code) const {
     if (!code || strlen(code) != 6) {
@@ -254,8 +255,10 @@ std::istream& operator>>(std::istream& is, BankAccount& account) {
     std::cout << "Enter account code (letter + 5 digits, e.g. A12345): ";
     is >> code;
     
+    // Clear the newline after reading code
+    is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    
     std::cout << "Enter owner name: ";
-    is.ignore();
     is.getline(name, 256);
     
     account.setUniqueCode(code);
